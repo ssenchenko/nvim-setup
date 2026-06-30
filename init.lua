@@ -1,3 +1,23 @@
+-- Leader keys (must be set before lazy.nvim and any mappings)
+vim.g.mapleader = " "
+vim.g.maplocalleader = " "
+
+-- Editor settings
+vim.opt.number = true         -- absolute line numbers
+vim.opt.relativenumber = true -- relative numbers on other lines (hybrid)
+vim.opt.signcolumn = "yes"    -- always show sign column (stable gutter for LSP)
+vim.opt.scrolloff = 8         -- keep 8 lines of context around the cursor
+vim.opt.colorcolumn = "100"   -- width guide at column 100
+vim.opt.termguicolors = true  -- 24-bit color (needed for Catppuccin fidelity)
+vim.opt.ignorecase = true     -- case-insensitive search...
+vim.opt.smartcase = true      -- ...unless the query contains an uppercase letter
+
+-- Persistent undo (survives closing a file)
+local undodir = vim.fn.stdpath("state") .. "/undo"
+vim.fn.mkdir(undodir, "p")
+vim.opt.undodir = undodir
+vim.opt.undofile = true
+
 -- Bootstrap lazy.nvim
 local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
 if not vim.loop.fs_stat(lazypath) then
