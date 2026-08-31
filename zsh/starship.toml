@@ -1,0 +1,62 @@
+# Starship prompt config.
+# Colors use ANSI names (green/purple/…) rather than hex, so the prompt
+# inherits the terminal's Catppuccin palette and follows light/dark automatically.
+
+# Two-line prompt: info line, then the input caret on its own line.
+format = """
+$directory\
+$git_branch\
+$git_status\
+${custom.worktree}\
+$cmd_duration\
+$line_break\
+$character"""
+
+add_newline = true
+
+[character]
+success_symbol = "[❯](bold green)"
+error_symbol = "[❯](bold red)"
+vicmd_symbol = "[❮](bold yellow)"
+
+[directory]
+style = "bold blue"
+truncation_length = 3
+truncate_to_repo = true
+read_only = " "          # Nerd Font lock glyph
+format = "[$path]($style)[$read_only]($read_only_style) "
+
+[git_branch]
+symbol = " "             # Nerd Font branch glyph
+style = "bold purple"
+format = "[$symbol$branch]($style) "
+
+[git_status]
+style = "bold red"
+format = '([$all_status$ahead_behind]($style) )'
+conflicted = "="
+ahead = "⇡${count}"
+behind = "⇣${count}"
+diverged = "⇕⇡${ahead_count}⇣${behind_count}"
+untracked = "?${count}"
+stashed = "*${count}"
+modified = "!${count}"
+staged = "+${count}"
+renamed = "»${count}"
+deleted = "✘${count}"
+
+# Shows the worktree folder name ONLY when you're inside a linked git worktree
+# (i.e. the git-dir differs from the shared common-dir). Hidden in the main checkout.
+[custom.worktree]
+description = "git worktree name (linked worktrees only)"
+when = '''[ "$(git rev-parse --git-dir 2>/dev/null)" != "$(git rev-parse --git-common-dir 2>/dev/null)" ]'''
+command = 'basename "$(git rev-parse --show-toplevel 2>/dev/null)"'
+shell = ["bash", "--noprofile", "--norc"]
+symbol = " "             # Nerd Font code-branch glyph
+style = "bold yellow"
+format = "[$symbol$output]($style) "
+
+[cmd_duration]
+min_time = 2000
+style = "italic bright-black"
+format = "[ $duration]($style)"

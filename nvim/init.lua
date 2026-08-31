@@ -2,12 +2,15 @@
 vim.g.mapleader = " "
 vim.g.maplocalleader = " "
 
+-- Disable netrw so oil.nvim is the only file explorer (must be before lazy.nvim)
+vim.g.loaded_netrw = 1
+vim.g.loaded_netrwPlugin = 1
+
 -- Editor settings
 vim.opt.number = true         -- absolute line numbers
 vim.opt.relativenumber = true -- relative numbers on other lines (hybrid)
 vim.opt.signcolumn = "yes"    -- always show sign column (stable gutter for LSP)
 vim.opt.scrolloff = 8         -- keep 8 lines of context around the cursor
-vim.opt.colorcolumn = "100"   -- width guide at column 100
 vim.opt.termguicolors = true  -- 24-bit color (needed for Catppuccin fidelity)
 vim.opt.ignorecase = true     -- case-insensitive search...
 vim.opt.smartcase = true      -- ...unless the query contains an uppercase letter
@@ -64,32 +67,40 @@ require("lazy").setup({
       vim.cmd.colorscheme("catppuccin")
     end,
   },
+  -- Live markdown preview in a native webview (Deno-backed). Tables wrap to the
+  -- pane width like on GitHub, since it renders real HTML/CSS.
   {
-    "MeanderingProgrammer/render-markdown.nvim",
+    "toppair/peek.nvim",
     ft = "markdown",
-    opts = {},
-  },
+    build = "deno task --quiet build:fast",
+    config = function()
+      local peek = require("peek")
+      peek.setup()
 
-  -- Render mermaid code blocks inline as ASCII/Unicode art (no terminal graphics needed).
-  -- Shells out to `node` (managed by nvm here), so only load when node is on PATH;
-  -- otherwise warn clearly instead of failing with a cryptic ENOENT.
-  {
-    "kais-radwan/ascii-mermaid",
-    ft = "markdown",
-    cond = function()
-      if vim.fn.executable("node") == 1 then
-        return true
+      -- macOS reports "Dark" when in dark mode; the key is absent (command errors,
+      -- empty stdout) in light mode.
+      local function os_theme()
+        local out = vim.fn.system({ "defaults", "read", "-g", "AppleInterfaceStyle" })
+        return out:match("Dark") and "dark" or "light"
       end
-      vim.schedule(function()
-        vim.notify(
-          "ascii-mermaid: `node` not found on PATH (it's managed by nvm). "
-            .. "Launch nvim from a shell where nvm has loaded node.",
-          vim.log.levels.WARN
-        )
-      end)
-      return false
+
+      -- Re-detect OS appearance and rebuild peek's launch args before opening, so
+      -- each preview matches the current light/dark mode. (Can't switch while open.)
+      local function open_themed()
+        peek.setup({ theme = os_theme() })
+        peek.open()
+      end
+
+      vim.api.nvim_create_user_command("PeekOpen", open_themed, {})
+      vim.api.nvim_create_user_command("PeekClose", peek.close, {})
+      vim.keymap.set("n", "<leader>md", function()
+        if peek.is_open() then
+          peek.close()
+        else
+          open_themed()
+        end
+      end, { desc = "Markdown preview toggle (peek)" })
     end,
-    opts = {},
   },
 
   -- Syntax highlighting
@@ -132,6 +143,7 @@ require("lazy").setup({
   {
     "stevearc/oil.nvim",
     dependencies = { "nvim-tree/nvim-web-devicons" },
+    lazy = false, -- load at startup so oil can handle `nvim .` and directory opens
     opts = {},
     keys = {
       { "-", "<cmd>Oil<cr>", desc = "Open parent directory" },
