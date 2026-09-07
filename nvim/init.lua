@@ -144,7 +144,18 @@ require("lazy").setup({
     "stevearc/oil.nvim",
     dependencies = { "nvim-tree/nvim-web-devicons" },
     lazy = false, -- load at startup so oil can handle `nvim .` and directory opens
-    opts = {},
+    opts = {
+      view_options = {
+        -- These are dotfiles repos: without this, a directory holding only
+        -- hidden files (e.g. wezterm/.wezterm.lua) renders as an empty page.
+        -- `g.` still toggles this off per-session.
+        show_hidden = true,
+        -- ...but never list VCS/OS noise.
+        is_always_hidden = function(name, _)
+          return name == ".git" or name == ".DS_Store"
+        end,
+      },
+    },
     keys = {
       { "-", "<cmd>Oil<cr>", desc = "Open parent directory" },
     },
