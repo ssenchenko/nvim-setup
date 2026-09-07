@@ -13,6 +13,7 @@ local function palette_for_appearance(appearance)
       surface0 = "#363a4f", surface1 = "#494d64",
       text = "#cad3f5", subtext0 = "#a5adcb",
       accent = "#c6a6f5", -- mauve
+      delta = "catppuccin-macchiato", -- git diff theme (see git/delta.gitconfig)
     }
   else
     -- Catppuccin Latte
@@ -22,6 +23,7 @@ local function palette_for_appearance(appearance)
       surface0 = "#ccd0da", surface1 = "#bcc0cc",
       text = "#4c4f69", subtext0 = "#6c6f85",
       accent = "#8839ef", -- mauve
+      delta = "catppuccin-latte", -- git diff theme (see git/delta.gitconfig)
     }
   end
 end
@@ -30,6 +32,15 @@ end
 -- so both the scheme and the tab-bar theme follow the system automatically.
 local pal = palette_for_appearance(wezterm.gui.get_appearance())
 config.color_scheme = pal.scheme
+
+-- Hand the git pager (delta) the matching light/dark theme. WezTerm's
+-- get_appearance() is the only reliable source for this on macOS: with the
+-- system set to "Auto", `defaults read -g AppleInterfaceStyle` reports the key
+-- as missing no matter which appearance is actually active.
+-- Applies to newly spawned panes, so open a new tab after the theme flips.
+config.set_environment_variables = {
+  DELTA_FEATURES = pal.delta,
+}
 
 -- Font (the NF build bundles the icon glyphs so oil.nvim etc. render correctly).
 -- Installed by `make font` (brew cask font-cascadia-code-nf).
@@ -78,19 +89,10 @@ config.keys = {
   -- Tabs
   { key = "t", mods = "CMD",       action = act.SpawnTab("CurrentPaneDomain") },
   { key = "w", mods = "CMD",       action = act.CloseCurrentTab({ confirm = false }) },
---  { key = "LeftArrow", mods = "CMD|SHIFT", action = act.ActivateTabRelative(-1) },
---  { key = "RightArrow", mods = "CMD|SHIFT", action = act.ActivateTabRelative(1) },
 
   -- Splits (panes)
   { key = "d", mods = "CMD",       action = act.SplitHorizontal({ domain = "CurrentPaneDomain" }) }, -- left/right
   { key = "d", mods = "CMD|SHIFT", action = act.SplitVertical({ domain = "CurrentPaneDomain" }) },   -- top/bottom
-  { key = "x", mods = "CMD",       action = act.CloseCurrentPane({ confirm = false }) },
-
-  -- Move between panes with Cmd + arrows
-  { key = "LeftArrow",  mods = "CMD|SHIFT", action = act.ActivatePaneDirection("Left") },
-  { key = "RightArrow", mods = "CMD|SHIFT", action = act.ActivatePaneDirection("Right") },
-  { key = "UpArrow",    mods = "CMD|SHIFT", action = act.ActivatePaneDirection("Up") },
-  { key = "DownArrow",  mods = "CMD|SHIFT", action = act.ActivatePaneDirection("Down") },
 
   -- macOS-style line navigation: Cmd+Left/Right = start/end of line (Home/End)
   { key = "LeftArrow",  mods = "CMD", action = act.SendKey({ key = "Home" }) },
