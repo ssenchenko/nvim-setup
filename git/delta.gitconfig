@@ -1,0 +1,82 @@
+# delta — syntax-highlighting pager for git, configured to read like the
+# side-by-side diff in Zed / VS Code.
+#
+# Installed to ~/.config/git/delta.gitconfig and pulled in from ~/.gitconfig
+# via an [include] line, so your own git settings are never overwritten.
+# Requires: brew install git-delta   (handled by `make delta`)
+
+[core]
+	pager = delta
+
+[interactive]
+	# Colorize `git add -p` etc. --color-only: delta must not re-wrap the hunks
+	# git parses back out of the filter.
+	diffFilter = delta --color-only
+
+[delta]
+	# --- Layout: the editor-style split view ---
+	side-by-side = true
+	line-numbers = true
+	wrap-max-lines = 2          # wrap long lines twice, then truncate with an arrow
+	max-line-length = 1024
+
+	# n / N jump between files and hunks while paging.
+	navigate = true
+	hyperlinks = true           # file paths become clickable in WezTerm
+
+	# --- Chrome ---
+	file-style = bold
+	file-decoration-style = "#8087a2 ul"
+	hunk-header-style = file line-number syntax
+	hunk-header-decoration-style = "#8087a2 box ul"
+	hunk-header-line-number-style = "#8087a2"
+	line-numbers-left-style = "#8087a2"
+	line-numbers-right-style = "#8087a2"
+	line-numbers-zero-style = "#8087a2"
+
+	# Theme comes from a feature so it can be swapped per-appearance; see the
+	# DELTA_FEATURES block in zsh/custom.zsh, which follows the macOS theme
+	# the same way WezTerm does.
+	features = catppuccin-macchiato
+
+# --- Dark: Catppuccin Macchiato (matches the WezTerm dark scheme) ---
+[delta "catppuccin-macchiato"]
+	syntax-theme = Catppuccin Macchiato
+	minus-style = syntax "#48384b"
+	minus-emph-style = syntax "#6a495a"
+	plus-style = syntax "#3b474a"
+	plus-emph-style = syntax "#51665a"
+	line-numbers-minus-style = "#ed8796"
+	line-numbers-plus-style = "#a6da95"
+	blame-palette = "#24273a #1e2030 #181926 #363a4f #494d64"
+
+# --- Light: Catppuccin Latte (matches the WezTerm light scheme) ---
+[delta "catppuccin-latte"]
+	syntax-theme = Catppuccin Latte
+	light = true
+	minus-style = syntax "#ebd6de"
+	minus-emph-style = syntax "#e8b9c6"
+	plus-style = syntax "#dae7dd"
+	plus-emph-style = syntax "#c3ddc3"
+	line-numbers-minus-style = "#d20f39"
+	line-numbers-plus-style = "#40a02b"
+	blame-palette = "#eff1f5 #e6e9ef #dce0e8 #ccd0da #bcc0cc"
+
+# --- Diff quality (independent of delta, but this is what makes the split
+# --- view actually readable) ---
+[diff]
+	# Histogram produces far better-aligned hunks than the default Myers.
+	algorithm = histogram
+	# Detect moved blocks and color them differently from real add/delete.
+	colorMoved = default
+	colorMovedWS = allow-indentation-change
+	# Show the enclosing function in hunk headers.
+	context = 5
+
+[merge]
+	# zdiff3 keeps the common ancestor in conflict markers — the 3-way view
+	# editors give you.
+	conflictstyle = zdiff3
+
+[rerere]
+	enabled = true
