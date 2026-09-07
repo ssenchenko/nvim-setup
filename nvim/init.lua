@@ -72,7 +72,21 @@ require("lazy").setup({
   {
     "toppair/peek.nvim",
     ft = "markdown",
-    build = "deno task --quiet build:fast",
+    -- peek is a Deno app: the plugin ships no bundle, it has to be built after
+    -- clone. Without this guard a missing/late-PATH deno leaves the plugin
+    -- installed but broken, and the only symptom is a "Module not found:
+    -- .../public/main.bundle.js" error when you try to open a preview.
+    build = function(plugin)
+      if vim.fn.executable("deno") == 0 then
+        vim.notify(
+          "peek.nvim: `deno` not found on PATH — markdown preview will not work.\n"
+            .. "Install it (brew install deno), then run :Lazy build peek.nvim",
+          vim.log.levels.WARN
+        )
+        return
+      end
+      vim.system({ "deno", "task", "--quiet", "build:fast" }, { cwd = plugin.dir }):wait()
+    end,
     config = function()
       local peek = require("peek")
       peek.setup()
@@ -87,6 +101,17 @@ require("lazy").setup({
       -- Re-detect OS appearance and rebuild peek's launch args before opening, so
       -- each preview matches the current light/dark mode. (Can't switch while open.)
       local function open_themed()
+        -- The Deno bundle is produced by the build step above; if that never
+        -- ran (deno installed after the plugin, say), fail with something
+        -- actionable instead of a raw module-resolution error.
+        local bundle = vim.fn.stdpath("data") .. "/lazy/peek.nvim/public/main.bundle.js"
+        if vim.fn.filereadable(bundle) == 0 then
+          vim.notify(
+            "peek.nvim: build artifact missing — run :Lazy build peek.nvim",
+            vim.log.levels.ERROR
+          )
+          return
+        end
         peek.setup({ theme = os_theme() })
         peek.open()
       end
