@@ -31,9 +31,10 @@ end
 local pal = palette_for_appearance(wezterm.gui.get_appearance())
 config.color_scheme = pal.scheme
 
--- Font (bundles the icon glyphs so oil.nvim etc. render correctly)
-config.font = wezterm.font("CaskaydiaCove Nerd Font")
--- config.font = wezterm.font("Cascadia Code NF")
+-- Font (the NF build bundles the icon glyphs so oil.nvim etc. render correctly).
+-- Installed by `make font` (brew cask font-cascadia-code-nf).
+local font_family = "Cascadia Code NF"
+config.font = wezterm.font(font_family)
 config.font_size = 13.0
 
 -- macOS renders WezTerm's default (grayscale) antialiasing quite thin.
@@ -55,7 +56,7 @@ config.audible_bell = "Disabled"
 
 -- Larger font for the tab header (the fancy tab bar has its own font settings)
 config.window_frame = {
-  font = wezterm.font("CaskaydiaCove Nerd Font", { weight = "Bold" }),
+  font = wezterm.font(font_family, { weight = "Bold" }),
   font_size = 14.0,
   active_titlebar_bg = pal.mantle,
   inactive_titlebar_bg = pal.crust,

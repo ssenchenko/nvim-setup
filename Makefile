@@ -1,9 +1,11 @@
 # Dotfiles installer — copies configs from this repo to their live locations.
 #
-#   make install    # install everything (nvim + wezterm + zsh)
+#   make install    # install everything (font + nvim + wezterm + zsh)
 #   make nvim       # just Neovim config
 #   make wezterm    # just WezTerm config
-#   make zsh        # just zsh + starship
+#   make zsh        # just zsh + starship config
+#   make font       # just the terminal font
+#   make starship   # just the starship binary
 #
 # Existing files are backed up to <file>.bak before being overwritten.
 
@@ -21,10 +23,40 @@ define install_file
 	@echo "  installed $(2)"
 endef
 
-.PHONY: install nvim wezterm zsh
+.PHONY: install nvim wezterm zsh font starship
 
-install: nvim wezterm zsh
+install: font starship nvim wezterm zsh
 	@echo "All configs installed."
+
+# Terminal font. The config references the family name "Cascadia Code NF";
+# without it WezTerm falls back to another font and warns on every launch.
+FONT_CASK   := font-cascadia-code-nf
+FONT_FAMILY := Cascadia Code NF
+
+font:
+	@echo "==> font -> $(FONT_FAMILY)"
+	@if system_profiler SPFontsDataType 2>/dev/null | grep -qF "Family: $(FONT_FAMILY)"; then \
+		echo "  $(FONT_FAMILY) already installed"; \
+	elif command -v brew >/dev/null 2>&1; then \
+		brew install --cask $(FONT_CASK) && echo "  installed $(FONT_CASK)"; \
+	else \
+		echo "  WARNING: $(FONT_FAMILY) is missing and Homebrew was not found."; \
+		echo "           Install it manually, or WezTerm will warn about the font on startup."; \
+	fi
+
+# Starship prompt binary. ~/.config/zsh/custom.zsh calls `starship init zsh`,
+# so without it every new shell prints "command not found: starship".
+starship:
+	@echo "==> starship"
+	@if command -v starship >/dev/null 2>&1; then \
+		echo "  starship already installed ($$(command -v starship))"; \
+	elif command -v brew >/dev/null 2>&1; then \
+		brew install starship && echo "  installed starship"; \
+	else \
+		echo "  WARNING: starship is missing and Homebrew was not found."; \
+		echo "           Install it from https://starship.rs, and make sure"; \
+		echo "           'eval \"$$(/opt/homebrew/bin/brew shellenv)\"' is in ~/.zprofile."; \
+	fi
 
 nvim:
 	@echo "==> nvim -> $(CONFIG)/nvim"
@@ -52,4 +84,4 @@ zsh:
 		printf '\n# nvim-setup: load portable zsh customizations\n%s\n' '$(ZSH_SOURCE_LINE)' >> "$(HOME)/.zshrc"; \
 		echo "  appended source line to ~/.zshrc"; \
 	fi
-	@echo "  note: 'brew install starship' must be run separately (and ensure brew shellenv is in ~/.zprofile)"
+	@echo "  note: the starship binary itself is installed by the 'starship' target"

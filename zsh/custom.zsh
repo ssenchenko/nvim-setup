@@ -52,4 +52,10 @@ add-zsh-hook preexec _notify_preexec
 add-zsh-hook precmd _notify_precmd
 
 # --- Starship prompt (keep last so it initializes after everything else) ---
-eval "$(starship init zsh)"
+# Guarded: without this the whole file errors out on a machine where the
+# `make starship` step hasn't run (or brew isn't on PATH yet).
+if command -v starship >/dev/null 2>&1; then
+  eval "$(starship init zsh)"
+else
+  echo "custom.zsh: starship not found — run 'make starship' in tools-setup (or 'brew install starship')" >&2
+fi
